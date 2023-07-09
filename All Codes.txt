@@ -1,0 +1,197 @@
+Codes for Question-1:
+
+y=c(9.01,3.06,4.21,1.76,8.00,14.98,1.80,35.26,2.17,9.13,2.92,1.68,1.26,13.58,8.31,34.64,0.07,2.56,2.22,2.00,2.56,32.47,3.85,6.59,0.68,3.14,6.17,3.43,12.19,4.25,4.46,8.93,42.19,4.72,0.65,14.54,0.31,11.57,2.62,3.61,13.69,0.96,5.76,6.10,5.35,1.89,2.09,1.76,3.99,0.18,18.02,19.20,8.98,16.53,33.71,46.50,17.49,22.78,0.77,13.26,15.74,3.67,26.21,1.44,28.59,15.11,2.28,2.24,5.89,7.45,4.64,18.20,3.90,24.74,0.59,2.89,3.25,0.51,10.50,24.85,43.73,9.27,3.65,0.00,13.86,8.24,2.73,4.19,0.66,19.50,3.27,25.02,14.08)
+mean(y)
+
+##Specifying_Distribution
+install.packages('SMPracticals')
+library(SMPracticals)
+hist(y,breaks=10,freq=FALSE,main = "Histogram of Y")
+curve(dexp(x,(1/9.865)),0,50,add=TRUE)
+qqexp(y,line=TRUE)
+sd(y)
+
+##Obtaining_MLE
+n=100
+m=7
+mu=sum(y)
+s=5
+lamda_mle=(n-m)/(mu+(s*m))
+lamda_mle
+
+## EM_algorithm_for_finding_maximum_likelihood_estimates ##
+
+em_mle<-function(t0)
+{
+  theta_initial<-t0
+  
+  ## update the theta_initial after replacing missing value ##
+  
+  theta_update<-100/(917.45+35+(7/theta_initial))
+  
+  ## Calculate the difference ##
+  
+  diff<-abs(theta_update-theta_initial)
+  
+  ## set the counter and epsilon ## 
+  
+  s<-1
+  
+  epsilon<-.0001
+  
+  while(diff>.0001)
+  {
+    theta_initial<-theta_update
+    theta_update<-100/(917.45+35+(7/theta_initial))
+    diff<-abs(theta_update-theta_initial)
+    s<-s+1
+  }
+  return(data.frame(Iterations=s,Estimate=theta_update))
+  
+}
+
+## running the code for different initial settings ##
+
+em_mle(.5)
+em_mle(.6)
+em_mle(.8)
+em_mle(1)
+em_mle(1.2)
+em_mle(1.5)
+em_mle(2)
+em_mle(20)
+
+
+##Finding which estimate fit the data well
+
+hist(y,breaks=10,freq=FALSE,main = "Histogram of Y")
+curve(dexp(x,0.09764292),0,50,add=TRUE)
+curve(dexp(x,0.09764498),0,50,add=TRUE,col='red')
+
+
+
+Codes for Question 2:-
+
+
+x=c(7, 3, 4, 11, 2, 7, 0, 2, 8, 1, 2, 4, 7, 6, 4, 7, 4, 3, 6, 3, 2, 6, 6, 1, 3, 7, 2,3, 1, 3, 8, 7, 5, 3, 5, 9, 11, 7, 8, 6, 7, 6, 7, 2, 4, 7, 5, 4, 6, 7)
+y=c(10.06, 12.76, 4.94, 8.52, 8.17, 13.82, 6.31, 8.27, 15.45, 9.54, 12.68, 6.84, 8.23, 11.28, 10.19, 13.69, 11.70, 10.54, 10.70, 7.17, 10.60, 13.60, 14.11, 14.82, 15.94, 6.49, 9.63, 7.77,11.38, 4.78, 13.31, 11.10, 8.10, 9.81, 11.64, 14.02, 4.58, 12.17, 7.25, 10.52, 11.64, 8.06,10.42, 9.21, 9.43, 11.17, 10.31, 10.22, 12.42, 9.27)
+
+plot(x,y)
+fit=lm(y~x)
+summary(fit)
+res=residuals(fit)
+sum(res^2)/48
+
+library(invgamma)
+
+sim<-function(a,b,c,d,e,f,x,y,alpha0,beta0,sig0)
+{
+  n=length(x)
+  X=matrix(rep(0,3000),1000,3)
+  colnames(X)=c("alpha","beta","sigma")
+  
+  X[1,]=c(alpha0,beta0,sig0)
+  
+  for(i in 2:1000)
+  {
+    X[i,1]=rnorm(1,(b*sum(y)-b*X[i-1,2]*sum(x)+a*X[i-1,3])/(X[i-1,3]+n*b),sqrt((b*X[i-1,3])/(X[i-1,3]+n*b)))
+    X[i,2]=rnorm(1,(d*sum(x*y)-X[i,1]*d*sum(x)+X[i-1,3]*c)/(d*sum(x^2)+X[i-1,3]),sqrt((X[i-1,3]*d)/(d*sum(x^2)+X[i-1,3])))
+    X[i,3]=rinvgamma(1,(n/2)+e,(sum((y-X[i,1]-X[i,2]*x)^2)+2*f)/2)
+    
+  }
+  return(X)
+}
+
+
+z=sim(9.85,0.73,0.09,0.02,10,69,x,y,9,0.05,8)
+z
+
+#end
+m=cbind(mean(z[,1]),mean(z[,2]),mean(z[,3]))
+m
+##Trying different initial settings
+z_1=sim(9.85,0.73,0.09,0.02,10,69,x,y,9.5,0.06,8.5)
+z_1
+
+m_1=cbind(mean(z_1[,1]),mean(z_1[,2]),mean(z_1[,3]))
+m_1
+
+z_2=sim(9.85,0.73,0.09,0.02,10,69,x,y,10,0.07,9)
+z_2
+
+m_2=cbind(mean(z_2[,1]),mean(z_2[,2]),mean(z_2[,3]))
+m_2
+
+matrix(c(m,m_1,m_2),3,3,byrow = TRUE)
+
+
+## Plot the marginal distribution of alpha,beta and sigma 
+
+par(mfrow=c(2,1))
+ts.plot(z[,1])
+acf(z[,1],lag=50)
+
+par(mfrow=c(2,1))
+ts.plot(z[,2])
+acf(z[,2],lag=50)
+
+par(mfrow=c(2,1))
+ts.plot(z[,3])
+acf(z[,3],lag=50)
+
+
+## plot the marginal distribution for different initial values
+
+par(mfrow=c(2,1))
+ts.plot(z_1[,1])
+acf(z_1[,1],lag=50)
+
+par(mfrow=c(2,1))
+ts.plot(z_1[,2])
+acf(z_1[,2],lag=50)
+
+par(mfrow=c(2,1))
+ts.plot(z_1[,3])
+acf(z_1[,3],lag=50)
+
+
+par(mfrow=c(2,1))
+ts.plot(z_2[,1])
+acf(z_2[,1],lag=50)
+
+par(mfrow=c(2,1))
+ts.plot(z_2[,2])
+acf(z_2[,2],lag=50)
+
+par(mfrow=c(2,1))
+ts.plot(z_2[,3])
+acf(z_2[,3],lag=50)
+
+
+## To get independent sample##
+## This is called thinning ##
+
+s<-seq(1,1000,6)
+z1<-z[,1][1:1000]
+z1<-z1[s]
+
+par(mfrow=c(2,1))
+ts.plot(z1)
+acf(z1,lag=50)
+
+s2<-seq(1,1000,6)
+z2<-z[,2][1:1000]
+z2<-z2[s2]
+
+par(mfrow=c(2,1))
+ts.plot(z2)
+acf(z2,lag=50)
+
+
+z3<-z[,3][1:1000]
+z3<-z3[s]
+
+par(mfrow=c(2,1))
+ts.plot(z3)
+acf(z3,lag=50)
+
